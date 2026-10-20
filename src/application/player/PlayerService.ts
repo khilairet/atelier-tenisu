@@ -1,4 +1,4 @@
-import { Player, PlayerAttributes, PlayerProps } from "../../domain/player/Player";
+import { Player, PlayerAttributes, PlayerFilter, PlayerProps } from "../../domain/player/Player";
 import { PlayerNotFoundError } from "../../domain/player/errors";
 import { PlayerRepository } from "../../domain/player/PlayerRepository";
 
@@ -8,9 +8,12 @@ import { PlayerRepository } from "../../domain/player/PlayerRepository";
 export class PlayerService {
   constructor(private readonly repository: PlayerRepository) {}
 
-  async listPlayers(): Promise<PlayerProps[]> {
+  async listPlayers(filter: PlayerFilter = {}): Promise<PlayerProps[]> {
     const players = await this.repository.findAll();
-    return players.sort(Player.compareByRanking).map((p) => p.toPrimitives());
+    return players
+      .filter((p) => p.matches(filter))
+      .sort(Player.compareByRanking)
+      .map((p) => p.toPrimitives());
   }
 
   async getPlayer(id: number): Promise<PlayerProps> {

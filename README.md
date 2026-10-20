@@ -16,10 +16,14 @@ npm run build && npm start
 | Méthode | Route          | Description                                   |
 |---------|----------------|-----------------------------------------------|
 | GET     | `/players`     | Liste des joueurs, du meilleur au moins bon   |
+| GET     | `/players/stats` | Statistiques (meilleur pays, IMC moyen, taille médiane) |
 | GET     | `/players/:id` | Détail d'un joueur                            |
 | POST    | `/players`     | Ajout d'un joueur (201 + header `Location`)   |
 | PUT     | `/players/:id` | Modification complète d'un joueur             |
 | DELETE  | `/players/:id` | Suppression d'un joueur (204)                 |
+
+La liste et les statistiques acceptent les filtres optionnels et combinables `country` (code ISO à 3 lettres) et `sex` (`M` ou `F`),
+insensibles à la casse : `GET /players?country=USA&sex=F`.
 
 Le classement trie par rang croissant (1 = meilleur), puis par points décroissants en cas d'égalité.
 

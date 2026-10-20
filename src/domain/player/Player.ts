@@ -30,6 +30,11 @@ export interface PlayerProps {
 
 export type PlayerAttributes = Omit<PlayerProps, "id">;
 
+export interface PlayerFilter {
+  countryCode?: string;
+  sex?: Sex;
+}
+
 export class Player {
   private constructor(private props: PlayerProps) {}
 
@@ -52,6 +57,17 @@ export class Player {
 
   get countryCode(): string {
     return this.props.country.code;
+  }
+
+  get sex(): Sex {
+    return this.props.sex;
+  }
+
+  matches(filter: PlayerFilter): boolean {
+    return (
+      (filter.countryCode === undefined || this.countryCode === filter.countryCode) &&
+      (filter.sex === undefined || this.sex === filter.sex)
+    );
   }
 
   get height(): number {

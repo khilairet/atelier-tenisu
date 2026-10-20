@@ -2,6 +2,13 @@ import { z } from "zod";
 
 export const playerIdSchema = z.coerce.number().int().positive();
 
+export const playerFilterQuerySchema = z
+  .object({
+    country: z.string().trim().length(3).toUpperCase().optional(),
+    sex: z.string().trim().toUpperCase().pipe(z.enum(["M", "F"])).optional(),
+  })
+  .transform(({ country, sex }) => ({ countryCode: country, sex }));
+
 export const playerBodySchema = z.object({
   firstname: z.string().trim().min(1),
   lastname: z.string().trim().min(1),

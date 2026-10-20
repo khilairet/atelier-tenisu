@@ -1,4 +1,5 @@
 import { averageBmi, bestCountryByWinRatio, CountryWinRatio, medianHeight } from "../../domain/player/PlayerStatistics";
+import { PlayerFilter } from "../../domain/player/Player";
 import { PlayerRepository } from "../../domain/player/PlayerRepository";
 
 export interface PlayerStatisticsDto {
@@ -16,14 +17,15 @@ const round = (value: number | null, decimals = 2): number | null =>
 export class PlayerStatisticsService {
   constructor(private readonly repository: PlayerRepository) {}
 
-  async getStatistics(): Promise<PlayerStatisticsDto> {
+  async getStatistics(filter: PlayerFilter = {}): Promise<PlayerStatisticsDto> {
     const players = await this.repository.findAll();
-    const bestCountry = bestCountryByWinRatio(players);
+    const filterPlayers = players.filter((p) => p.matches(filter));
+    const bestCountry = bestCountryByWinRatio(filterPlayers);
 
     return {
       bestCountryByWinRatio: bestCountry && { ...bestCountry, ratio: round(bestCountry.ratio)! },
-      averageBmi: round(averageBmi(players)),
-      medianHeight: medianHeight(players),
+      averageBmi: round(averageBmi(filterPlayers)),
+      medianHeight: medianHeight(filterPlayers),
     };
   }
 }

@@ -1,17 +1,17 @@
 import { Router } from "express";
 import { PlayerService } from "../../application/player/PlayerService";
 import { PlayerStatisticsService } from "../../application/player/PlayerStatisticsService";
-import { playerBodySchema, playerIdSchema } from "./playerSchemas";
+import { playerBodySchema, playerFilterQuerySchema, playerIdSchema } from "./playerSchemas";
 
 export function playerRouter(service: PlayerService, statisticsService: PlayerStatisticsService): Router {
   const router = Router();
 
-  router.get("/", async (_req, res) => {
-    res.json(await service.listPlayers());
+  router.get("/", async (req, res) => {
+    res.json(await service.listPlayers(playerFilterQuerySchema.parse(req.query)));
   });
 
-  router.get("/stats", async (_req, res) => {
-    res.json(await statisticsService.getStatistics());
+  router.get("/stats", async (req, res) => {
+    res.json(await statisticsService.getStatistics(playerFilterQuerySchema.parse(req.query)));
   });
 
   router.get("/:id", async (req, res) => {
