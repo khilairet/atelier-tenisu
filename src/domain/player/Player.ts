@@ -50,6 +50,29 @@ export class Player {
     return this.props.data.points;
   }
 
+  get countryCode(): string {
+    return this.props.country.code;
+  }
+
+  get height(): number {
+    return this.props.data.height;
+  }
+
+  get wins(): number {
+    return this.props.data.last.filter((r) => r === 1).length;
+  }
+
+  get matchesPlayed(): number {
+    return this.props.data.last.length;
+  }
+
+  /** IMC = poids (kg) / taille (m)² */
+  get bmi(): number {
+    const weightKg = this.props.data.weight / 1000;
+    const heightM = this.props.data.height / 100;
+    return weightKg / (heightM * heightM);
+  }
+
   update(attributes: PlayerAttributes): void {
     const next: PlayerProps = { ...structuredClone(attributes), id: this.props.id };
     Player.assertInvariants(next);
