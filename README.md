@@ -15,7 +15,7 @@ npm run build && npm start
 
 | Méthode | Route            | Description                                             |
 | ------- | ---------------- | ------------------------------------------------------- |
-| GET     | `/players`       | Liste des joueurs, du meilleur au moins bon             |
+| GET     | `/players`       | Liste paginée des joueurs, du meilleur au moins bon     |
 | GET     | `/players/stats` | Statistiques (meilleur pays, IMC moyen, taille médiane) |
 | GET     | `/players/:id`   | Détail d'un joueur                                      |
 | POST    | `/players`       | Ajout d'un joueur (201)                                 |
@@ -24,6 +24,9 @@ npm run build && npm start
 
 La liste et les statistiques acceptent les filtres optionnels et combinables `country` (code ISO à 3 lettres) et `sex` (`M` ou `F`),
 insensibles à la casse : `GET /players?country=USA&sex=F`.
+
+`GET /players` est paginé via `page` (défaut 1) et `limit` (défaut 20, max 100) : `GET /players?page=2&limit=10`.
+La réponse a la forme `{ "data": [...], "pagination": { "page", "limit", "total", "totalPages" } }`.
 
 ## Architecture
 
