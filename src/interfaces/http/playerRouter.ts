@@ -20,7 +20,7 @@ export function playerRouter(service: PlayerService, statisticsService: PlayerSt
 
   router.post("/", async (req, res) => {
     const player = await service.createPlayer(playerBodySchema.parse(req.body));
-    res.status(201).location(`${req.baseUrl}/${player.id}`).json(player);
+    res.status(201).json(player);
   });
 
   router.put("/:id", async (req, res) => {
