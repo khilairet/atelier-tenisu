@@ -3,12 +3,12 @@ import { ZodError, z } from "zod";
 import { InvalidPlayerError, PlayerNotFoundError } from "../../domain/player/errors";
 
 export const notFoundHandler: RequestHandler = (req, res) => {
-  res.status(404).json({ error: `Route ${req.method} ${req.originalUrl} introuvable` });
+  res.status(404).json({ error: `Route ${req.method} ${req.originalUrl} not found` });
 };
 
 export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   if (err instanceof ZodError) {
-    res.status(400).json({ error: "Requête invalide", details: z.flattenError(err) });
+    res.status(400).json({ error: "Invalid request", details: z.flattenError(err) });
     return;
   }
   if (err instanceof PlayerNotFoundError) {
@@ -20,9 +20,9 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     return;
   }
   if (err?.type === "entity.parse.failed") {
-    res.status(400).json({ error: "JSON invalide" });
+    res.status(400).json({ error: "Invalid JSON" });
     return;
   }
   console.error(err);
-  res.status(500).json({ error: "Erreur interne du serveur" });
+  res.status(500).json({ error: "Internal server error" });
 };

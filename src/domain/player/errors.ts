@@ -9,6 +9,6 @@ export class InvalidPlayerError extends DomainError {}
 
 export class PlayerNotFoundError extends DomainError {
   constructor(id: number) {
-    super(`Joueur ${id} introuvable`);
+    super(`Player ${id} not found`);
   }
 }

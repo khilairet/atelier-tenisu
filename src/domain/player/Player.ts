@@ -82,7 +82,7 @@ export class Player {
     return this.props.data.last.length;
   }
 
-  /** IMC = poids (kg) / taille (m)² */
+  /** BMI = weight (kg) / height (m)² */
   get bmi(): number {
     const weightKg = this.props.data.weight / 1000;
     const heightM = this.props.data.height / 100;
@@ -105,22 +105,22 @@ export class Player {
 
   private static assertInvariants(props: PlayerProps): void {
     if (!Number.isInteger(props.id) || props.id <= 0) {
-      throw new InvalidPlayerError("L'identifiant doit être un entier positif");
+      throw new InvalidPlayerError("Id must be a positive integer");
     }
     if (!props.firstname.trim() || !props.lastname.trim()) {
-      throw new InvalidPlayerError("Le prénom et le nom sont obligatoires");
+      throw new InvalidPlayerError("Firstname and lastname are required");
     }
     if (!Number.isInteger(props.data.rank) || props.data.rank < 1) {
-      throw new InvalidPlayerError("Le rang doit être un entier supérieur ou égal à 1");
+      throw new InvalidPlayerError("Rank must be an integer greater than or equal to 1");
     }
     if (props.data.points < 0) {
-      throw new InvalidPlayerError("Les points ne peuvent pas être négatifs");
+      throw new InvalidPlayerError("Points cannot be negative");
     }
     if (props.data.weight <= 0 || props.data.height <= 0 || props.data.age <= 0) {
-      throw new InvalidPlayerError("Le poids, la taille et l'âge doivent être positifs");
+      throw new InvalidPlayerError("Weight, height and age must be positive");
     }
     if (props.data.last.some((r) => r !== 0 && r !== 1)) {
-      throw new InvalidPlayerError("Les derniers résultats doivent valoir 0 ou 1");
+      throw new InvalidPlayerError("Last results must be 0 or 1");
     }
   }
 }
