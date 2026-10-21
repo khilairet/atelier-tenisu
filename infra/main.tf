@@ -41,10 +41,10 @@ resource "aws_security_group" "service" {
   vpc_id      = data.aws_vpc.default.id
 
   ingress {
-    from_port   = var.container_port
-    to_port     = var.container_port
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    from_port       = var.container_port
+    to_port         = var.container_port
+    protocol        = "tcp"
+    security_groups = [aws_security_group.vpc_link.id]
   }
 
   egress {
@@ -106,6 +106,10 @@ resource "aws_ecs_service" "app" {
   task_definition = aws_ecs_task_definition.app.arn
   desired_count   = 1
   launch_type     = "FARGATE"
+
+  service_registries {
+    registry_arn = aws_service_discovery_service.app.arn
+  }
 
   network_configuration {
     subnets          = data.aws_subnets.default.ids
