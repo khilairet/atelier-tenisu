@@ -5,23 +5,13 @@ variable "region" {
 
 variable "app_name" {
   type    = string
-  default = "atelier_tenisu"
+  default = "tenisu"
 }
 
 variable "image_tag" {
   description = "Tag de l'image Docker poussée dans ECR"
   type        = string
   default     = "latest"
-}
-
-variable "container_port" {
-  type    = number
-  default = 3000
-}
-
-variable "cpu" {
-  type    = number
-  default = 256
 }
 
 variable "memory" {

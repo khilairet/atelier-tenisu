@@ -1,5 +1,5 @@
 output "app_url" {
-  value = aws_apigatewayv2_api.app.api_endpoint
+  value = aws_lambda_function_url.app.function_url
 }
 
 output "ecr_repository_url" {

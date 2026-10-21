@@ -1,14 +1,3 @@
-data "aws_vpc" "default" {
-  default = true
-}
-
-data "aws_subnets" "default" {
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.default.id]
-  }
-}
-
 resource "aws_ecr_repository" "app" {
   name                 = var.app_name
   image_tag_mutability = "MUTABLE"
@@ -25,95 +14,73 @@ resource "aws_ecr_lifecycle_policy" "app" {
   policy = jsonencode({
     rules = [{
       rulePriority = 1
-      description  = "Garder les 10 dernières images"
+      description  = "Garder les 5 dernières images"
       selection = {
         tagStatus   = "any"
         countType   = "imageCountMoreThan"
-        countNumber = 10
+        countNumber = 5
       }
       action = { type = "expire" }
     }]
   })
 }
 
-resource "aws_security_group" "service" {
-  name_prefix = "${var.app_name}-svc-"
-  vpc_id      = data.aws_vpc.default.id
-
-  ingress {
-    from_port       = var.container_port
-    to_port         = var.container_port
-    protocol        = "tcp"
-    security_groups = [aws_security_group.vpc_link.id]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-data "aws_iam_policy_document" "ecs_assume" {
+data "aws_iam_policy_document" "lambda_assume" {
   statement {
     actions = ["sts:AssumeRole"]
     principals {
       type        = "Service"
-      identifiers = ["ecs-tasks.amazonaws.com"]
+      identifiers = ["lambda.amazonaws.com"]
     }
   }
 }
 
-resource "aws_iam_role" "execution" {
-  name_prefix        = "${var.app_name}-exec-"
-  assume_role_policy = data.aws_iam_policy_document.ecs_assume.json
+resource "aws_iam_role" "lambda" {
+  name_prefix        = "${var.app_name}-lambda-"
+  assume_role_policy = data.aws_iam_policy_document.lambda_assume.json
 }
 
-resource "aws_iam_role_policy_attachment" "execution" {
-  role       = aws_iam_role.execution.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+resource "aws_iam_role_policy_attachment" "lambda_basic" {
+  role       = aws_iam_role.lambda.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-resource "aws_ecs_cluster" "app" {
-  name = var.app_name
-}
+# Les données sont en mémoire : chaque instance Lambda a son propre état, perdu à son recyclage.
+resource "aws_lambda_function" "app" {
+  function_name = var.app_name
+  role          = aws_iam_role.lambda.arn
+  package_type  = "Image"
+  image_uri     = "${aws_ecr_repository.app.repository_url}:${var.image_tag}"
+  architectures = ["x86_64"]
+  memory_size   = var.memory
+  timeout       = 15
 
-resource "aws_ecs_task_definition" "app" {
-  family                   = var.app_name
-  requires_compatibilities = ["FARGATE"]
-  network_mode             = "awsvpc"
-  cpu                      = var.cpu
-  memory                   = var.memory
-  execution_role_arn       = aws_iam_role.execution.arn
-
-  container_definitions = jsonencode([{
-    name         = var.app_name
-    image        = "${aws_ecr_repository.app.repository_url}:${var.image_tag}"
-    essential    = true
-    portMappings = [{ containerPort = var.container_port }]
-    environment  = [{ name = "PORT", value = tostring(var.container_port) }]
-  }])
-}
-
-resource "aws_ecs_service" "app" {
-  name            = var.app_name
-  cluster         = aws_ecs_cluster.app.id
-  task_definition = aws_ecs_task_definition.app.arn
-  desired_count   = 1
-  launch_type     = "FARGATE"
-
-  service_registries {
-    registry_arn = aws_service_discovery_service.app.arn
+  environment {
+    variables = {
+      PORT                         = "3000"
+      AWS_LWA_READINESS_CHECK_PATH = "/health"
+    }
   }
+}
 
-  network_configuration {
-    subnets          = data.aws_subnets.default.ids
-    security_groups  = [aws_security_group.service.id]
-    assign_public_ip = true
-  }
+resource "aws_lambda_function_url" "app" {
+  function_name      = aws_lambda_function.app.function_name
+  authorization_type = "NONE"
+}
+
+# Une Function URL publique exige ces deux permissions.
+resource "aws_lambda_permission" "url" {
+  statement_id           = "AllowPublicInvokeFunctionUrl"
+  action                 = "lambda:InvokeFunctionUrl"
+  function_name          = aws_lambda_function.app.function_name
+  principal              = "*"
+  function_url_auth_type = "NONE"
+}
+
+resource "aws_lambda_permission" "invoke" {
+  statement_id             = "AllowPublicInvokeFunction"
+  action                   = "lambda:InvokeFunction"
+  function_name            = aws_lambda_function.app.function_name
+  principal                = "*"
+  invoked_via_function_url = true
 }
